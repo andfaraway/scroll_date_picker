@@ -18,7 +18,9 @@ class ScrollDatePicker extends StatefulWidget {
     DatePickerOptions? options,
     DatePickerScrollViewOptions? scrollViewOptions,
     this.indicator,
-  })  : minimumDate = minimumDate ?? DateTime(1960, 1, 1),
+    this.indicatorIsBehind = true,
+  })
+      : minimumDate = minimumDate ?? DateTime(1960, 1, 1),
         maximumDate = maximumDate ?? DateTime.now(),
         locale = locale ?? const Locale('en'),
         options = options ?? const DatePickerOptions(),
@@ -56,6 +58,9 @@ class ScrollDatePicker extends StatefulWidget {
   /// Indicator displayed in the center of the ScrollDatePicker
   final Widget? indicator;
 
+  /// Is the indicator behind the ScrollDatePicker
+  final bool indicatorIsBehind;
+
   @override
   State<ScrollDatePicker> createState() => _ScrollDatePickerState();
 }
@@ -81,13 +86,15 @@ class _ScrollDatePickerState extends State<ScrollDatePicker> {
   List<int> _months = [];
   List<int> _days = [];
 
-  int get selectedYearIndex => !_years.contains(_selectedDate.year)
-      ? 0
-      : _years.indexOf(_selectedDate.year);
+  int get selectedYearIndex =>
+      !_years.contains(_selectedDate.year)
+          ? 0
+          : _years.indexOf(_selectedDate.year);
 
-  int get selectedMonthIndex => !_months.contains(_selectedDate.month)
-      ? 0
-      : _months.indexOf(_selectedDate.month);
+  int get selectedMonthIndex =>
+      !_months.contains(_selectedDate.month)
+          ? 0
+          : _months.indexOf(_selectedDate.month);
 
   int get selectedDayIndex {
     return !_days.contains(_selectedDate.day)
@@ -99,28 +106,34 @@ class _ScrollDatePickerState extends State<ScrollDatePicker> {
     if (_yearController.hasClients) {
       return _years[_yearController.selectedItem % _years.length];
     }
-    return DateTime.now().year;
+    return DateTime
+        .now()
+        .year;
   }
 
   int get selectedMonth {
     if (_monthController.hasClients) {
       return _months[_monthController.selectedItem % _months.length];
     }
-    return DateTime.now().month;
+    return DateTime
+        .now()
+        .month;
   }
 
   int get selectedDay {
     if (_dayController.hasClients) {
       return _days[_dayController.selectedItem % _days.length];
     }
-    return DateTime.now().day;
+    return DateTime
+        .now()
+        .day;
   }
 
   @override
   void initState() {
     super.initState();
     _selectedDate = widget.selectedDate.isAfter(widget.maximumDate) ||
-            widget.selectedDate.isBefore(widget.minimumDate)
+        widget.selectedDate.isBefore(widget.minimumDate)
         ? DateTime.now()
         : widget.selectedDate;
 
@@ -221,8 +234,8 @@ class _ScrollDatePickerState extends State<ScrollDatePicker> {
         _selectedDate.year == widget.minimumDate.year) {
       _months = [
         for (int i = widget.minimumDate.month;
-            i <= widget.maximumDate.month;
-            i++)
+        i <= widget.maximumDate.month;
+        i++)
           i
       ];
     } else if (_selectedDate.year == widget.maximumDate.year) {
@@ -236,7 +249,7 @@ class _ScrollDatePickerState extends State<ScrollDatePicker> {
 
   void _initDays() {
     int _maximumDay =
-        getMonthlyDate(year: _selectedDate.year, month: _selectedDate.month);
+    getMonthlyDate(year: _selectedDate.year, month: _selectedDate.month);
     _days = [for (int i = 1; i <= _maximumDay; i++) i];
     if (_selectedDate.year == widget.maximumDate.year &&
         _selectedDate.month == widget.maximumDate.month &&
@@ -309,55 +322,43 @@ class _ScrollDatePickerState extends State<ScrollDatePicker> {
     return Stack(
       alignment: Alignment.center,
       children: [
+        if(widget.indicatorIsBehind)
+          IgnorePointer(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                widget.indicator ??
+                    Container(
+                      height: widget.options.itemExtent,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.withOpacity(0.15),
+                        borderRadius: const BorderRadius.all(Radius.circular(4)),
+                      ),
+                    ),
+              ],
+            ),
+          ),
         Row(
           mainAxisAlignment: widget.scrollViewOptions.mainAxisAlignment,
           crossAxisAlignment: widget.scrollViewOptions.crossAxisAlignment,
           children: _getScrollDatePicker(),
         ),
-        // Date Picker Indicator
-        IgnorePointer(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Expanded(
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        widget.options.backgroundColor,
-                        widget.options.backgroundColor.withOpacity(0.7),
-                      ],
+        if(!widget.indicatorIsBehind)
+          IgnorePointer(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                widget.indicator ??
+                    Container(
+                      height: widget.options.itemExtent,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.withOpacity(0.15),
+                        borderRadius: const BorderRadius.all(Radius.circular(4)),
+                      ),
                     ),
-                  ),
-                ),
-              ),
-              widget.indicator ??
-                  Container(
-                    height: widget.options.itemExtent,
-                    decoration: BoxDecoration(
-                      color: Colors.grey.withOpacity(0.15),
-                      borderRadius: const BorderRadius.all(Radius.circular(4)),
-                    ),
-                  ),
-              Expanded(
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        widget.options.backgroundColor.withOpacity(0.7),
-                        widget.options.backgroundColor,
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
       ],
     );
   }
